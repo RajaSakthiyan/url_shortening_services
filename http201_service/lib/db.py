@@ -1,8 +1,9 @@
+import json
 from typing import TypeAlias
 from flask import Flask
 import requests
 
-from lib.hash import RandomSequence
+from lib.hash import HashSequence
 
 URL_ALIAS: TypeAlias = dict[str, dict[str, str]]
 
@@ -21,14 +22,14 @@ class RemoteLMDB:
 
     def create_alias(self, long_url: str) -> URL_ALIAS:
         try:
-            random_sequence = RandomSequence(long_url)
+            hash_sequence = HashSequence(long_url)
             post_data: dict = {
-                "hash": random_sequence.hash,
-                "code": random_sequence.sequence,
-                "long_url": random_sequence.long_url,
+                "hash": hash_sequence.hash,
+                "code": hash_sequence.sequence,
+                "long_url": hash_sequence.long_url,
             }
             response: requests.Response = requests.post(
-                self.db_post_api, data=post_data, headers=DEFAULT_HEADER
+                self.db_post_api, data=json.dumps(post_data), headers=DEFAULT_HEADER
             )
             if response.status_code == 201:
                 alias_data: dict = response.json()

@@ -6,7 +6,7 @@ from flask_cors import CORS
 
 from lib.db import RemoteLMDB, DBError
 
-NOT_ALLOWED_DOMAINS = ("https://sho.rt/", "http://localhost/", "http://127.0.0.1/")
+NOT_ALLOWED_DOMAINS = ("https://sho.rt", "http://localhost", "http://127.0.0.1")
 URL_CHAR_MAX = 2040
 
 
@@ -21,7 +21,7 @@ class ShortUrlSchema(Schema):
     long_url = fields.Url(required=True, load_only=True)
     status = fields.String(dump_only=True)
     message = fields.String(dump_only=True)
-    alias: fields.Nested(
+    alias = fields.Nested(
         Schema.from_dict(
             dict(id=fields.String(), code=fields.String(), long_url=fields.String())
         ),
@@ -36,7 +36,12 @@ short_url_schema = ShortUrlSchema()
 def create_short_url() -> tuple[list, int]:
     try:
         post_data: dict = short_url_schema.load(request.get_json())
-        if post_data["long_url"] in NOT_ALLOWED_DOMAINS:
+        if any(
+            map(
+                lambda domain: post_data["long_url"].startswith(domain),
+                NOT_ALLOWED_DOMAINS
+            )
+        ):
             abort(422, "The given URL domain is restricted in our service")
         elif len(post_data["long_url"]) >= URL_CHAR_MAX:
             abort(414, "The given URL is too long for the server to proceed")
@@ -44,7 +49,10 @@ def create_short_url() -> tuple[list, int]:
         return (
             short_url_schema.dump(
                 dict(
-                    status="success", message="Short url has been created", alias=result
+                    test={"id": "r"},
+                    status="success",
+                    message="Short url has been created",
+                    alias=result,
                 )
             ),
             201,

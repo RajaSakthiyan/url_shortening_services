@@ -14,4 +14,4 @@ class DevelopmentConfig(BaseConfig):
 
     DEBUG = True
     LMBD_HOST = "http://127.0.0.1:8083"
-    LMBD_HOST_POST_API = "/get"
+    LMBD_HOST_GET_API = "/get"
